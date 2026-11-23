@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+
+# Cancel in-progress runs for the same branch/PR.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint, types and package
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
+
+      - name: Choose where converter-studio comes from
+        run: ./.github/client-source.sh
+
+      - name: Install tox
+        run: python -m pip install --upgrade pip tox
+
+      # Ruff (lint and format), mypy (strict, django-stubs), the build and twine check.
+      - name: Lint, types and package
+        run: tox -e lint,build
+
+  test:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: '3.11'
+            envs: py311-django52,py311-wagtail81-django52
+          - python-version: '3.12'
+            envs: py312-django52,py312-django60,py312-django61,py312-wagtail74-django52,py312-wagtail74-django60
+          - python-version: '3.13'
+            envs: py313-django60,py313-wagtail74-django60,py313-wagtail80-django61
+          - python-version: '3.14'
+            envs: py314-django61,py314-wagtail80-django52,py314-wagtail81-django61
+          - python-version: '3.15'
+            envs: py315-django61,py315-wagtail81-django61
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
+
+      - name: Choose where converter-studio comes from
+        run: ./.github/client-source.sh
+
+      - name: Install tox
+        run: python -m pip install --upgrade pip tox
+
+      # Unit tests against a fake API: no network, no API key.
+      - name: Run tests
+        run: tox -e ${{ matrix.envs }}

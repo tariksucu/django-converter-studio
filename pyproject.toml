@@ -1,0 +1,138 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "django-converter-studio"
+dynamic = ["version"]
+description = "Convert uploaded files in Django and Wagtail with Converter Studio: HEIC and RAW photos to JPG, Office documents to PDF, scans to text, videos to MP4."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Converter Studio", email = "support@converter.studio" }]
+keywords = [
+  "django",
+  "wagtail",
+  "converter-studio",
+  "file-conversion",
+  "heic-to-jpg",
+  "raw",
+  "pdf",
+  "ocr",
+  "video",
+  "uploads",
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Web Environment",
+  "Framework :: Django",
+  "Framework :: Django :: 5.2",
+  "Framework :: Django :: 6.0",
+  "Framework :: Django :: 6.1",
+  "Framework :: Wagtail",
+  "Framework :: Wagtail :: 7",
+  "Framework :: Wagtail :: 8",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
+  "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+  "Topic :: Multimedia :: Graphics :: Graphics Conversion",
+  "Topic :: Multimedia :: Video :: Conversion",
+  "Topic :: Office/Business",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Typing :: Typed",
+]
+dependencies = ["Django>=5.2", "converter-studio>=1.0,<2", "httpx>=0.27,<1"]
+
+[project.optional-dependencies]
+wagtail = ["wagtail>=7.4"]
+
+[project.urls]
+Homepage = "https://converter.studio"
+Documentation = "https://converter.studio/developers"
+Source = "https://github.com/tariksucu/django-converter-studio"
+Issues = "https://github.com/tariksucu/django-converter-studio/issues"
+Changelog = "https://github.com/tariksucu/django-converter-studio/blob/main/CHANGELOG.md"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "pytest-django>=4.9",
+  "tox>=4.20",
+  "mypy>=1.13",
+  "django-stubs>=5.2",
+  "ruff>=0.8",
+  "build>=1.2",
+  "twine>=6.1",
+]
+
+[tool.hatch.version]
+path = "src/django_converter_studio/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/django_converter_studio"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "src/django_converter_studio",
+  "tests",
+  "README.md",
+  "CHANGELOG.md",
+  "LICENSE",
+  "pyproject.toml",
+  "tox.ini",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers"]
+DJANGO_SETTINGS_MODULE = "tests.settings"
+pythonpath = ["."]
+
+[tool.mypy]
+strict = true
+python_version = "3.11"
+files = ["src", "tests"]
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "tests.settings"
+
+[[tool.mypy.overrides]]
+# Wagtail and the packages it brings ship no type information.
+module = [
+  "wagtail",
+  "wagtail.*",
+  "modelcluster.*",
+  "modelsearch.*",
+  "taggit.*",
+  "treebeard.*",
+  "django_filters.*",
+  "willow.*",
+  "pillow_heif.*",
+]
+ignore_missing_imports = true
+follow_untyped_imports = false
+
+[[tool.mypy.overrides]]
+module = ["django_converter_studio.migrations.*"]
+ignore_errors = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "C4", "PT", "RET", "S", "PTH", "DJ"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "DJ008"]
+"**/migrations/**" = ["RUF012", "E501", "I001"]
